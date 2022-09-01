@@ -63,8 +63,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Icon actionButtonIcon1 = const Icon(Icons.play_circle);
-  Icon actionButtonIcon2 = const Icon(Icons.pause_circle);
+  Icon actionButtonIcon1 = const Icon(Icons.play_circle, color: Colors.white,);
+  Icon actionButtonIcon2 = const Icon(Icons.pause_circle, color: Colors.white);
   Text stateTitle1 = const Text("만보기 작동중지 상태");
   Text stateTitle2 = const Text("만보기 작동중");
   Text stateTitle3 = const Text("만보기 켜는중");
@@ -146,6 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
         if (isPassDay) {
           stepCounter = 0;
           timeValue = 0;
+          tempTimeValue = 0;
           comboCount = 0;
           beforeStepCount = 0;
           DateTime now = new DateTime.now();
@@ -157,7 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
           tempTimeValue++;
           if (tempTimeValue == 10) {
             tempTimeValue = 0;
-            if (stepCounter - beforeStepCount >= 20) {
+            if (stepCounter - beforeStepCount >= 10) {
               comboCount++;
             }
             beforeStepCount = stepCounter;
@@ -199,6 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (isPassDay) {
         stepCounter = 0;
         timeValue = 0;
+        tempTimeValue = 0;
         comboCount = 0;
         beforeStepCount = 0;
         DateTime now = new DateTime.now();
@@ -320,7 +322,10 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Row(
           children: <Widget>[
-            Text(appTitle),
+            Text(
+              appTitle,
+              style: TextStyle(color: Colors.black, fontSize: 21)
+            ),
             IconButton(
                 onPressed: () async {
                   await asyncInputDialog(context);
@@ -332,9 +337,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 icon: Icon(
                   Icons.edit,
                   size: 16,
+                  color: Colors.black,
                 ),)
           ],
         ),
+        backgroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
@@ -385,6 +393,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           MaterialPageRoute(
                               builder: (context) => DailyCheckPage(dbHelper)));
                     },
+                    style: ElevatedButton.styleFrom(primary: Colors.black),
                     icon: Icon(
                       Icons.calendar_month,
                       size: 16,
@@ -413,13 +422,13 @@ class _MyHomePageState extends State<MyHomePage> {
                             },
                             style: ElevatedButton.styleFrom(
                               primary: Colors.white,
-                              onPrimary: Colors.blue,
+                              onPrimary: Colors.black,
                             ),
                             icon: Icon(
                               Icons.play_circle_outline,
                               size: 16,
                             ),
-                            label: Text(btnTitles[index]))
+                            label: Text(btnTitles[index], style: TextStyle(color: Colors.black)))
                     );
                 }),
               ),
@@ -433,6 +442,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onPressed: changeState,
           tooltip: '',
           child: actionState ? actionButtonIcon2 : actionButtonIcon1,
+          backgroundColor: Colors.black,
         ), // This trailing comma makes a
       ), // uto-formatting nicer for build methods.
     );
