@@ -21,6 +21,26 @@ class LogItem {
       required this.day,
       required this.combo
       });
+
+  LogItem.fromJson(Map<String, dynamic> json)
+    : id = json['id'],
+      walks = json['walks'],
+      seconds = json['seconds'],
+        year = json['year'],
+        month = json['month'],
+        day = json['day'],
+        combo = json['combo'];
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'walks': walks,
+    'seconds': seconds,
+    'year': year,
+    'month': month,
+    'day': day,
+    'combo': combo,
+  };
+
 }
 
 class DbHelper {
@@ -134,7 +154,9 @@ class DbHelper {
         combo: logItems.first["combo"],
       );
     }
-    return null;
+    LogItem newOne = LogItem(id: 0, walks: 0, seconds: 0, year: 0, month: 0, day: 0, combo: 0);
+    newOne = await add(newOne);
+    return newOne;
   }
 
   Future<String?> getAppInfo() async {
@@ -152,6 +174,27 @@ class DbHelper {
           "year", "month", "day", "combo"],
         where: "year = ? and month = ?",
         whereArgs: [year, month]);
+    List<LogItem> rets = <LogItem>[];
+    result.forEach((item) {
+      rets.add(LogItem(
+        id: item["id"],
+        walks: item["walks"],
+        seconds: item["seconds"],
+        year: item["year"],
+        month: item["month"],
+        day: item["day"],
+        combo: item["combo"],
+      ));
+    });
+    return rets;
+  }
+
+  Future<List<LogItem>> getTotalLogs() async {
+    List<Map> result = await db.query("daily_log",
+        columns: ["id", "walks", "seconds",
+          "year", "month", "day", "combo"],
+        where: "walks > ? and seconds > ?",
+        whereArgs: [0,0]);
     List<LogItem> rets = <LogItem>[];
     result.forEach((item) {
       rets.add(LogItem(
@@ -267,6 +310,28 @@ class DbHelper {
       whereArgs: [id],
     );
     return id;
+  }
+
+  // 일간기록을 모두 지운다
+  Future<int> clear() async {
+    return await db.delete('daily_log');
+  }
+
+  // 일간기록을 추가한다
+  Future insert(LogItem item) async {
+    await db.insert(
+      'daily_log', // table name
+      {
+        'id': item.id,
+        'walks': item.walks,
+        'seconds': item.seconds,
+        'year': item.year,
+        'month': item.month,
+        'day': item.day,
+        'combo': item.combo,
+      }
+    );
+    return item;
   }
 
   Future close() async => db.close();
