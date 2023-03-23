@@ -7,8 +7,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
-        android:label="walker"
-        android:name="${applicationName}"
+        android:label="냥이야놀자"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

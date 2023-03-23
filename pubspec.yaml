@@ -1,5 +1,5 @@
 name: walker
-description: walker
+description: 고양이와 집사를 위한 만보기 입니다. 놀이할 때 발생하는 운동정보(걸음수, 시간)을 기록합니다.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:mi_band/mi_band.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class WatchSelector extends StatefulWidget {
   final String selectedDevice;
@@ -25,8 +26,33 @@ class _WatchSelectorState extends State<WatchSelector> {
 
   @override
   void initState() {
+    //checkPermissionAndInit();
     super.initState();
     useWatch = widget.useWatch;
+  }
+
+  Future<void> checkPermissionAndInit() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.bluetooth,
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect
+    ].request();
+    if(!statuses[Permission.bluetoothConnect]!.isGranted) { // 허용이 안된 경우
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              content: Text("블루투스 기기 연결 관련 권한 설정을 확인해주세요."),
+              actions: [
+                TextButton(
+                    onPressed: () async {
+                      openAppSettings(); // 앱 설정으로 이동
+                    },
+                    child: Text('권한 설정하기')),
+              ],
+            );
+          });
+    }
   }
 
   void showFailDialog(BuildContext context) {

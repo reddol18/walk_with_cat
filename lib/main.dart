@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: '호박아 놀자~'),
+      home: const MyHomePage(title: '냥이야 놀자~'),
     );
   }
 }
@@ -97,7 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late LogItem lastLog;
   AudioPlayer player = AudioPlayer();
   List<String> btnTitles = ["새소리", "쥐소리", "호랑이소리"];
-  String appTitle = "호박아 놀자~";
+  String appTitle = "냥이야 놀자~";
   String titleValue = "";
   MiBand miBand = MiBand();
   String currentSoundTitle = "새소리";
@@ -105,21 +105,61 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _onOverlay = false;
   late List gyroscope;
   List<IconItem> iconButtons = [];
+  late Timer timerForPermission;
 
   late dynamic prefs;
 
   @override
   void initState() {
     super.initState();
-    checkPermission();
-    // 가장 최근 기록을 가져온다
-    getLastLog();
-    initIconButtons();
+    checkPermissionAndInit();
   }
 
-  Future<void> checkPermission() async {
-    if (!await Permission.activityRecognition.isGranted) {
-      await Permission.activityRecognition.request();
+  void checkPermissionAfterSettings() {
+    Timer.periodic(const Duration(seconds: 5), (timer) async {
+      PermissionStatus status = await Permission.activityRecognition.request();
+      if(status.isGranted) {
+        // 가장 최근 기록을 가져온다
+        getLastLog();
+        initIconButtons();
+
+        timer.cancel();
+      }
+    });
+  }
+
+  Future<void> checkPermissionAndInit() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.activityRecognition,
+      Permission.bluetooth,
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect
+    ].request();
+    if(!statuses[Permission.activityRecognition]!.isGranted) { // 허용이 안된 경우
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              content: Text("신체활동 권한 설정을 확인해주세요."),
+              actions: [
+                TextButton(
+                    onPressed: () async {
+                      openAppSettings(); // 앱 설정으로 이동
+                    },
+                    child: Text('권한 설정하기')),
+                TextButton(
+                    onPressed: () async {
+                      checkPermissionAfterSettings();
+                      Navigator.pop(context);
+                    },
+                    child: Text('앱으로 돌아가기')),
+              ],
+            );
+          });
+    } else {
+      // 가장 최근 기록을 가져온다
+      getLastLog();
+      initIconButtons();
     }
   }
 
@@ -159,7 +199,10 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     prefs = await SharedPreferences.getInstance();
     selectedMeDevice = prefs.getString("walker_selected_me_device") ?? "";
-    useWatch = prefs.getBool("walker_use_watch") ?? false;
+    setState(() {
+      useWatch = prefs.getBool("walker_use_watch") ?? false;
+      iconButtons[1].text = "스마트와치 연결" + (useWatch ? "(사용중)" : "(미사용)");
+    });
     if (useWatch) {
       if (selectedMeDevice.isNotEmpty) {
         // 기존에 연결했던 미밴드가 있으므로 바로 연결시도한다
@@ -289,12 +332,15 @@ class _MyHomePageState extends State<MyHomePage> {
       showFailDialog(context);
       setState(() {
         useWatch = false;
+        iconButtons[1].text = "스마트와치 연결" + (useWatch ? "(사용중)" : "(미사용)");
       });
       await prefs.setBool(
           "walker_use_watch",
           useWatch);
     } finally {
       setState(() {
+        useWatch = true;
+        iconButtons[1].text = "스마트와치 연결" + (useWatch ? "(사용중)" : "(미사용)");
         _onOverlay = false;
       });
       startPedometer();
@@ -368,6 +414,7 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {
           _onOverlay = true;
           useWatch = false;
+          iconButtons[1].text = "스마트와치 연결" + (useWatch ? "(사용중)" : "(미사용)");
         });
         await prefs.setBool(
             "walker_use_watch",
@@ -719,17 +766,36 @@ class _MyHomePageState extends State<MyHomePage> {
                                       await prefs.setString(
                                           "walker_selected_me_device",
                                           device.name);
+                                      await prefs.setBool(
+                                          "walker_use_watch",
+                                          true);
+                                      useWatch = true;
+                                      setState(() {
+                                        iconButtons[1].text = "스마트와치 연결" +
+                                            (useWatch ? "(사용중)" : "(미사용)");
+                                      });
+                                      selectedMeDevice = device.name;
                                       startMiBandWithDevice(device);
                                     }, (value) async {
-                                  firstStepDone = false;
-                                  await prefs.setBool(
-                                      "walker_use_watch",
-                                      value);
-                                  useWatch = value;
-                                  if (!value) {
-                                    miBand.disconnect();
-                                    await startPedometer();
-                                  }
+                                      // 이미 선택된 디바이스가 있어야 활성화한다
+                                      print("selectedMeDevice:" + selectedMeDevice);
+                                      if (selectedMeDevice.isNotEmpty) {
+                                        firstStepDone = false;
+                                        await prefs.setBool(
+                                            "walker_use_watch",
+                                            value);
+                                        useWatch = value;
+                                        setState(() {
+                                          iconButtons[1].text = "스마트와치 연결" +
+                                              (useWatch ? "(사용중)" : "(미사용)");
+                                        });
+                                        if (!value) {
+                                          miBand.disconnect();
+                                          await startPedometer();
+                                        } else {
+                                          startMiBand();
+                                        }
+                                      }
                                 })));
                   } else if (name == "speed") {
                     final cameras = await availableCameras();
